@@ -40,10 +40,6 @@ impl GitHubClient {
             .json::<serde_json::Value>()
             .await?;
         let items = resp["items"].as_array().unwrap();
-        for item in items {
-            println!("debug {}", item)
-        }
-
         Ok(items
             .iter()
             .map(|item| serde_json::from_value(item.clone()).unwrap())
@@ -52,7 +48,6 @@ impl GitHubClient {
 
     pub async fn get_readme(&self, owner: &str, repo: &str) -> Result<String, reqwest::Error> {
         let url = format!("{}/repos/{}/{}/readme", GITHUB_API_BASE, owner, repo);
-        println!("debug : {}", url);
         let resp = self
             .client
             .get(&url)

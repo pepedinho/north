@@ -2,10 +2,11 @@ use std::io;
 
 use clap::Parser;
 use display::display_repos::display_repos;
-use requests::find_repos::{GitHubClient, Repo};
+use requests::find_repos::GitHubClient;
 use tokio;
 
 mod display;
+mod parsing;
 mod requests;
 
 #[derive(Parser)]
