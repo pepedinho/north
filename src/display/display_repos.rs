@@ -25,8 +25,8 @@ pub async fn display_repos(repos: Vec<Repo>, client: GitHubClient) -> io::Result
             if i == selected_index {
                 stdout.execute(cursor::MoveTo(0, i as u16))?;
                 match &repo.description {
-                    Some(desc) => println!("> {} - {}", repo.full_name, desc),
-                    None => println!("> {} - {}", repo.full_name, "null"),
+                    Some(desc) => println!("\x1b[34m> {} - {}\x1b[0m", repo.full_name, desc),
+                    None => println!("\x1b[34m> {} - {}\x1b[0m", repo.full_name, "null"),
                 }
             } else {
                 stdout.execute(cursor::MoveTo(0, i as u16))?;
@@ -50,9 +50,7 @@ pub async fn display_repos(repos: Vec<Repo>, client: GitHubClient) -> io::Result
                     KeyCode::Down => {
                         if selected_index < repos.len() - 1 {
                             selected_index += 1;
-                            println!("deeebug");
                         }
-                        println!("debug")
                     }
                     KeyCode::Enter => {
                         let selected_repo = &repos[selected_index];
