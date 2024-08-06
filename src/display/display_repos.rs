@@ -1,5 +1,6 @@
 use std::{
     io::{self, Write},
+    process::Stdio,
     time::Duration,
 };
 
@@ -30,8 +31,10 @@ pub async fn display_repos(repos: Vec<Repo>, client: GitHubClient) -> io::Result
             if i == selected_index {
                 stdout.execute(cursor::MoveTo(0, i as u16))?;
                 match &repo.description {
-                    Some(desc) => println!("\x1b[34m> {} - {}\x1b[0m", repo.full_name, desc),
-                    None => println!("\x1b[34m> {} - {}\x1b[0m", repo.full_name, "null"),
+                    Some(desc) => {
+                        println!("\x1b[31m>\x1b[34m {} - {}\x1b[0m", repo.full_name, desc)
+                    }
+                    None => println!("\x1b[31m>\x1b[34m {} - {}\x1b[0m", repo.full_name, "null"),
                 }
             } else {
                 stdout.execute(cursor::MoveTo(0, i as u16))?;
@@ -73,21 +76,34 @@ pub async fn display_repos(repos: Vec<Repo>, client: GitHubClient) -> io::Result
                         match readme_result {
                             Ok(readme) => {
                                 if let Some(cmd) = extract_install_section(&readme) {
-                                    println!("Installation Command:\n {}", cmd);
-                                    let mut command_parts = cmd.split_whitespace();
-                                    let program = command_parts.next().unwrap();
-                                    let args: Vec<&str> = command_parts.collect();
-                                    let output = Command::new(program).args(&args).output()?;
+                                    let formated_cmd =
+                                        cmd.lines().skip(1).collect::<Vec<&str>>().join(";");
+                                    println!("Installation Command:\n {}", formated_cmd);
+                                    //let mut command_parts = cmd.split_whitespace();
+                                    //let program = command_parts.next().unwrap();
+                                    //let args: Vec<&str> = command_parts.collect();
+                                    let mut process = Command::new("sh")
+                                        .arg("-c")
+                                        .arg(formated_cmd)
+                                        .stdin(Stdio::inherit())
+                                        .stdout(Stdio::inherit())
+                                        .stderr(Stdio::inherit())
+                                        .spawn()
+                                        .expect("Failed to run the install process");
+                                    let output = process
+                                        .wait_with_output()
+                                        .expect("Failed to wait proccess");
 
                                     if output.status.success() {
-                                        println!(
-                                            "Command executed succesfully :\n{}",
-                                            String::from_utf8_lossy(&output.stderr)
-                                        );
+                                        break;
                                     } else {
                                         println!(
                                             "Command execution failed :\n{}",
                                             String::from_utf8_lossy(&output.stderr)
+                                        );
+                                        println!(
+                                            "Command executed failed :\n{}",
+                                            String::from_utf8_lossy(&output.stdout)
                                         );
                                     }
                                 }
