@@ -1,9 +1,9 @@
 use std::io;
 
 use clap::Parser;
-use display::display_repos::display_repos;
-use requests::find_repos::GitHubClient;
 use tokio;
+
+use crate::{display::display::display_repos, requests::requests::GitHubClient};
 
 mod display;
 mod parsing;
