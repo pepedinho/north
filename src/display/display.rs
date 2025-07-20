@@ -79,26 +79,27 @@ pub async fn display_repos(repos: Vec<Repo>, client: GitHubClient) -> io::Result
 
 fn display_selected_repos(repo: &Repo) {
     let desc = repo.description.as_deref().unwrap_or("No desc");
-    println!("\nnSelected repo: {} - {}", repo.full_name, desc);
+    println!("\nSelected repo: {} - {}", repo.full_name, desc);
 }
 
 async fn instal_from_readme(client: &GitHubClient, repo: &Repo) -> Result<(), Box<dyn std::error::Error>>{
     match client.get_readme(&repo.owner.login, &repo.name).await {
         Ok(readme) => {
-            if let Some(cmd) = extract_install_section(&readme) {
-                let formated_cmd = cmd.lines().skip(1).collect::<Vec<_>>().join(";");
-                println!("Instalation command :\n {}", formated_cmd);
-                let status = Command::new("sh")
-                    .arg("-c")
-                    .arg(&formated_cmd)
-                    .stdin(Stdio::inherit())
-                    .stdout(Stdio::inherit())
-                    .stderr(Stdio::inherit())
-                    .status()?;
-                
-                if !status.success() {
-                    eprintln!("failed to install {}.", repo.name);
-                }
+            let cmd = extract_install_section(&readme)?;
+            let formated_cmd = cmd.lines().skip(1).collect::<Vec<_>>().join(";");
+            println!("Instalation command :\n {}", formated_cmd);
+            let status = Command::new("sh")
+                .arg("-c")
+                .arg(&formated_cmd)
+                .stdin(Stdio::inherit())
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .status()?;
+            
+            if !status.success() {
+                eprintln!("failed to install {}.", repo.name);
+            } else {
+                println!("Installed correctly !");
             }
         }
         Err(e) => eprintln!("Failed to fetch the README : {}", e),
